@@ -3,7 +3,8 @@
  *
  *  Prog ::= Exp "EOF"
  *  Exp  ::= Term ("+" Term)*
- *  Term ::= Fact ("*" Fact)*
+ *  Term ::= Pow ("*" Pow)*
+ *  Pow ::= Fact ("**" Pow)?
  *  Fact ::= "int" | "(" Exp ")"
  */
 
@@ -12,7 +13,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 public enum TokenCategory {
-    INT, PLUS, TIMES, OPEN_PAR, CLOSE_PAR, EOF, BAD_TOKEN
+    INT, PLUS, TIMES, POW, OPEN_PAR, CLOSE_PAR, EOF, BAD_TOKEN
 }
 
 public class Token {
@@ -32,7 +33,7 @@ public class Token {
 public class Scanner {
     readonly String input;
     static readonly Regex regex = new Regex(
-        @"(\d+)|([+])|([*])|([(])|([)])|(\s)|(.)");
+        @"(\d+)|([+])|([*][*])|([*])|([(])|([)])|(\s)|(.)");
 
     public Scanner(String input) {
         this.input = input;
@@ -45,14 +46,16 @@ public class Scanner {
             } else if (m.Groups[2].Success) {
                 yield return new Token(TokenCategory.PLUS, m.Value);
             } else if (m.Groups[3].Success) {
-                yield return new Token(TokenCategory.TIMES, m.Value);
+                yield return new Token(TokenCategory.POW, m.Value);
             } else if (m.Groups[4].Success) {
-                yield return new Token(TokenCategory.OPEN_PAR, m.Value);
+                yield return new Token(TokenCategory.TIMES, m.Value);
             } else if (m.Groups[5].Success) {
-                yield return new Token(TokenCategory.CLOSE_PAR, m.Value);
+                yield return new Token(TokenCategory.OPEN_PAR, m.Value);
             } else if (m.Groups[6].Success) {
-                // skip
+                yield return new Token(TokenCategory.CLOSE_PAR, m.Value);
             } else if (m.Groups[7].Success) {
+                // skip
+            } else if (m.Groups[8].Success) {
                 yield return new Token(TokenCategory.BAD_TOKEN, m.Value);
             }
         }
@@ -102,10 +105,19 @@ public class Parser {
     }
 
     public int Term() {
-        var result = Fact();
+        var result = Pow();
         while (Current == TokenCategory.TIMES) {
             Expect(TokenCategory.TIMES);
-            result *= Fact();
+            result *= Pow();
+        }
+        return result;
+    }
+
+    public int Pow() {
+        var result = Fact();
+        if (Current == TokenCategory.POW) {
+            Expect(TokenCategory.POW);
+            result = (int) Math.Pow(result, Pow());
         }
         return result;
     }
