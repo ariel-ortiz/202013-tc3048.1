@@ -90,44 +90,63 @@ public class Parser {
         }
     }
 
-    public int Prog() {
+    public Node Prog() {
         var result = Exp();
+        var node = new Prog();
+        node.Add(result);
         Expect(TokenCategory.EOF);
-        return result;
+        return node;
     }
 
-    public int Exp() {
+    public Node Exp() {
         var result = Term();
         while (Current == TokenCategory.PLUS) {
-            Expect(TokenCategory.PLUS);
-            result += Term();
+            var token = Expect(TokenCategory.PLUS);
+            var node = new Plus() {
+                AnchorToken = token
+            };
+            node.Add(result);
+            node.Add(Term());
+            result = node;
         }
         return result;
     }
 
-    public int Term() {
+    public Node Term() {
         var result = Pow();
         while (Current == TokenCategory.TIMES) {
-            Expect(TokenCategory.TIMES);
-            result *= Pow();
+            var token = Expect(TokenCategory.TIMES);
+            var node = new Times() {
+                AnchorToken = token
+            };
+            node.Add(result);
+            node.Add(Pow());
+            result = node;
         }
         return result;
     }
 
-    public int Pow() {
+    public Node Pow() {
         var result = Fact();
         if (Current == TokenCategory.POW) {
-            Expect(TokenCategory.POW);
-            result = (int) Math.Pow(result, Pow());
+            var token = Expect(TokenCategory.POW);
+            var node = new Pow() {
+                AnchorToken = token
+            };
+            node.Add(result);
+            node.Add(Pow());
+            result = node;
         }
         return result;
     }
 
-    public int Fact() {
+    public Node Fact() {
         switch(Current) {
         case TokenCategory.INT:
             var token = Expect(TokenCategory.INT);
-            return Int32.Parse(token.Lexeme);
+            return new Int() {
+                AnchorToken = token
+            };
         case TokenCategory.OPEN_PAR:
             Expect(TokenCategory.OPEN_PAR);
             var result = Exp();
@@ -184,6 +203,12 @@ public class Node: IEnumerable<Node> {
     }
 }
 
+public class Prog:  Node { }
+public class Plus:  Node { }
+public class Times: Node { }
+public class Pow:   Node { }
+public class Int:   Node { }
+
 public class Driver {
     public static void Main() {
         Console.Write("> ");
@@ -191,7 +216,7 @@ public class Driver {
         var parser = new Parser(new Scanner(line).Start().GetEnumerator());
         try {
             var result = parser.Prog();
-            Console.WriteLine(result);
+            Console.WriteLine(result.ToStringTree());
         } catch (SyntaxError) {
             Console.WriteLine("Bad syntax!");
         }
