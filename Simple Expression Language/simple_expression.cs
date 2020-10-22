@@ -209,6 +209,66 @@ public class Times: Node { }
 public class Pow:   Node { }
 public class Int:   Node { }
 
+public class EvalVisitor {
+
+    public int Visit(Prog node) {
+        return Visit((dynamic) node[0]);
+    }
+
+    public int Visit(Plus node) {
+        return Visit((dynamic) node[0]) + Visit((dynamic) node[1]);
+    }
+
+    public int Visit(Times node) {
+        return Visit((dynamic) node[0]) * Visit((dynamic) node[1]);
+    }
+
+    public int Visit(Pow node) {
+        return (int) Math.Pow(
+            Visit((dynamic) node[0]),
+            Visit((dynamic) node[1]));
+    }
+
+    public int Visit(Int node) {
+        return Int32.Parse(node.AnchorToken.Lexeme);
+    }
+}
+
+public class LispVisitor {
+
+    public string Visit(Prog node) {
+        return Visit((dynamic) node[0]);
+    }
+
+    public string Visit(Plus node) {
+        return "(+ "
+            + Visit((dynamic) node[0])
+            + " "
+            + Visit((dynamic) node[1])
+            + ")";
+    }
+
+    public string Visit(Times node) {
+        return "(* "
+            + Visit((dynamic) node[0])
+            + " "
+            + Visit((dynamic) node[1])
+            + ")";
+    }
+
+    public string Visit(Pow node) {
+        return "(expt "
+            + Visit((dynamic) node[0])
+            + " "
+            + Visit((dynamic) node[1])
+            + ")";
+    }
+
+    public string Visit(Int node) {
+        return node.AnchorToken.Lexeme;
+    }
+}
+
 public class Driver {
     public static void Main() {
         Console.Write("> ");
@@ -216,7 +276,9 @@ public class Driver {
         var parser = new Parser(new Scanner(line).Start().GetEnumerator());
         try {
             var result = parser.Prog();
-            Console.WriteLine(result.ToStringTree());
+            // Console.WriteLine(result.ToStringTree());
+            Console.WriteLine(new EvalVisitor().Visit((dynamic) result));
+            Console.WriteLine(new LispVisitor().Visit((dynamic) result));
         } catch (SyntaxError) {
             Console.WriteLine("Bad syntax!");
         }
