@@ -1,0 +1,10 @@
+{
+  "name": "SimpleExpressionLanguage",
+  "version": "1.0.0",
+  "description": "Simple expression language",
+  "license": "GPL-3.0-or-later",
+  "main": "execute.js",
+  "dependencies": {
+    "wabt": "^1.0.20"
+  }
+}
