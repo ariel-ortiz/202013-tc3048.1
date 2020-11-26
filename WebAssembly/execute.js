@@ -22,12 +22,15 @@ async function getInstance() {
 async function main() {
   try {
     const instance = await getInstance();
-    const { duplicate, fahrenheit2celsius, pruebita } = instance.exports;
-    console.log(duplicate(15));
-    console.log(fahrenheit2celsius(212));
-    console.log(fahrenheit2celsius(32));
-    console.log(fahrenheit2celsius(-40));
-    console.log(pruebita(10.1, 5.2));
+    const { duplicate, fahrenheit2celsius, pruebita,
+      positive_even, fact } = instance.exports;
+    // console.log(duplicate(15));
+    // console.log(fahrenheit2celsius(212));
+    // console.log(fahrenheit2celsius(32));
+    // console.log(fahrenheit2celsius(-40));
+    // console.log(pruebita(10.1, 5.2));
+    // console.log(positive_even(0));
+    console.log(fact(6));
   } catch (err) {
     console.error(err);
   }
